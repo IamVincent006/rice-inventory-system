@@ -6,7 +6,7 @@ $dbname   = 'defaultdb';
 $username = 'avnadmin';
 $password = 'AVNS_ShF_TzLSUw9eVohb6sR';
 
-// Connection String with SSL requirement for Aivenn
+// Connection String with SSL requirement for Aiven
 $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
 
 try {
