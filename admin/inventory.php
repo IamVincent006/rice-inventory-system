@@ -14,13 +14,91 @@ $products = $stmt->fetchAll();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rice Inventory | Rice ni Mang Kanor Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rice Inventory | Our Bigasan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <style>
-        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
-        .main-content { flex-grow: 1; padding: 30px; }
-        .table { background: white; border-radius: 12px; overflow: hidden; }
+        :root {
+            --harvest-gold: #facc15;
+            --surface: #ffffff;
+            --bg-gray: #f8fafc;
+            --dark-blue: #0f172a;
+            --transition: all 0.25s ease;
+        }
+
+        body { 
+            background-color: var(--bg-gray); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            color: var(--dark-blue);
+            margin: 0;
+        }
+
+        .main-content { 
+            flex-grow: 1; 
+            padding: 1.5rem; 
+            margin-left: 280px; 
+            transition: margin 0.3s ease;
+        }
+
+        @media (max-width: 991.98px) {
+            .main-content { margin-left: 0; padding-top: 80px; }
+        }
+
+        .inventory-card {
+            border-radius: 1.5rem;
+            border: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            background: var(--surface);
+        }
+
+        .table thead th {
+            background: #f1f5f9;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            padding: 1.25rem;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 1.25rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .badge-stock {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .action-btn {
+            width: 40px; height: 40px;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            border-radius: 0.75rem;
+            transition: var(--transition);
+        }
+
+        .modal-content {
+            border-radius: 1.5rem;
+            border: none;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+
+        .form-control {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            font-size: 1rem; /* Prevents mobile zoom */
+        }
     </style>
 </head>
 <body class="d-flex">
@@ -29,68 +107,58 @@ $products = $stmt->fetchAll();
 
     <div class="main-content">
         <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold">Rice Inventory</h2>
-                <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addRiceModal">
-                    <i class="bi bi-plus-lg me-2"></i> Add New Variety
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                <div>
+                    <h2 class="fw-800 mb-1">Rice Inventory</h2>
+                    <p class="text-secondary mb-0 small">Manage stock levels and variety pricing</p>
+                </div>
+                <button class="btn btn-dark px-4 py-2 fw-700 rounded-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#addRiceModal">
+                    <i class="ph-bold ph-plus me-2"></i> Add New Variety
                 </button>
             </div>
 
             <?php if(isset($_GET['delete_error'])): ?>
-                <div class="alert alert-danger shadow-sm"><i class="bi bi-exclamation-triangle-fill me-2"></i>Cannot delete! Existing sales are tied to this variety.</div>
-            <?php endif; ?>
-            <?php if(isset($_GET['delete_success'])): ?>
-                <div class="alert alert-success shadow-sm"><i class="bi bi-trash me-2"></i>Rice variety deleted safely.</div>
-            <?php endif; ?>
-            <?php if(isset($_GET['edit_success'])): ?>
-                <div class="alert alert-primary shadow-sm"><i class="bi bi-pencil-square me-2"></i>Rice variety updated successfully!</div>
+                <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-4 small">
+                    <i class="ph-fill ph-warning-circle me-2"></i> Archive failed: Variety linked to sales records.
+                </div>
             <?php endif; ?>
 
-            <div class="card border-0 shadow-sm p-4">
+            <div class="card inventory-card overflow-hidden">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
                             <tr>
                                 <th>Variety</th>
-                                <th>Current Stock</th>
-                                <th>Price / kg</th>
-                                <th>Price / Half</th>
-                                <th>Price / Sack</th>
-                                <th>Last Updated</th>
-                                <th>Actions</th>
+                                <th>Stock Level</th>
+                                <th>Price/kg</th>
+                                <th>Half Sack</th>
+                                <th>Full Sack</th>
+                                <th class="text-end no-print">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($products as $row): ?>
                             <tr>
-                                <td class="fw-bold text-primary"><?php echo htmlspecialchars($row['rice_type']); ?></td>
                                 <td>
-                                    <span class="badge <?php echo ($row['current_stock_kg'] < 50) ? 'bg-danger' : 'bg-success'; ?>">
+                                    <div class="fw-800 text-dark"><?php echo htmlspecialchars($row['rice_type']); ?></div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">UID: #RC-0<?php echo $row['product_id']; ?></div>
+                                </td>
+                                <td>
+                                    <span class="badge-stock <?php echo ($row['current_stock_kg'] < 50) ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'; ?>">
                                         <?php echo number_format($row['current_stock_kg'], 1); ?> kg
                                     </span>
                                 </td>
-                                <td>₱ <?php echo number_format($row['price_kilo'], 2); ?></td>
-                                <td>₱ <?php echo number_format($row['price_half_sack'], 2); ?></td>
-                                <td>₱ <?php echo number_format($row['price_sack'], 2); ?></td>
-                                <td class="small text-muted">
-                                    <?php echo date('M d, Y h:i A', strtotime($row['last_updated'])); ?>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-success" onclick="openRestockModal(<?php echo $row['product_id']; ?>, '<?php echo addslashes($row['rice_type']); ?>')" title="Quick Restock">
-                                            <i class="bi bi-patch-plus"></i>
+                                <td class="fw-600 text-dark">₱<?php echo number_format($row['price_kilo'], 2); ?></td>
+                                <td class="fw-600 text-muted">₱<?php echo number_format($row['price_half_sack'], 2); ?></td>
+                                <td class="fw-600 text-muted">₱<?php echo number_format($row['price_sack'], 2); ?></td>
+                                <td class="no-print">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <button class="btn btn-success action-btn" onclick="openRestockModal(<?php echo $row['product_id']; ?>, '<?php echo addslashes($row['rice_type']); ?>')">
+                                            <i class="ph-bold ph-plus-circle"></i>
                                         </button>
-                                        
-                                        <button class="btn btn-sm btn-outline-primary" onclick="openEditModal(<?php echo $row['product_id']; ?>, '<?php echo addslashes($row['rice_type']); ?>', <?php echo $row['current_stock_kg']; ?>, <?php echo $row['price_kilo']; ?>, <?php echo $row['price_half_sack']; ?>, <?php echo $row['price_sack']; ?>)" title="Edit Details">
-                                            <i class="bi bi-pencil"></i>
+                                        <button class="btn btn-light border action-btn" onclick="openEditModal(...)">
+                                            <i class="ph-bold ph-pencil-simple"></i>
                                         </button>
-                                        
-                                        <form action="process_delete_rice.php" method="POST" onsubmit="return confirm('WARNING: Are you sure you want to delete <?php echo addslashes($row['rice_type']); ?>?');" style="margin:0;">
-                                            <input type="hidden" name="product_id" value="<?php echo $row['product_id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Variety">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -103,87 +171,41 @@ $products = $stmt->fetchAll();
     </div>
 
     <div class="modal fade" id="addRiceModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-2 p-md-4">
                 <form action="process_add_rice.php" method="POST">
-                    <div class="modal-header"><h5>Add New Variety</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                    <div class="modal-body">
-                        <div class="mb-3"><label>Variety Name</label><input type="text" name="rice_type" class="form-control" required></div>
-                        <div class="mb-3"><label>Initial Stock (kg)</label><input type="number" step="0.01" name="initial_stock" class="form-control" required></div>
-                        <div class="row">
-                            <div class="col"><label>Price/kg</label><input type="number" step="0.01" name="p_kilo" class="form-control" required></div>
-                            <div class="col"><label>Price/Half</label><input type="number" step="0.01" name="p_half" class="form-control" required></div>
-                            <div class="col"><label>Price/Sack</label><input type="number" step="0.01" name="p_sack" class="form-control" required></div>
-                        </div>
-                    </div>
-                    <div class="modal-footer"><button type="submit" class="btn btn-dark">Save Variety</button></div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="editRiceModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="process_edit_rice.php" method="POST">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Rice Variety</h5>
+                    <div class="modal-header border-0">
+                        <h5 class="fw-800">Register Variety</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" name="product_id" id="edit_id">
-                        <div class="mb-3"><label>Variety Name</label><input type="text" name="rice_type" id="edit_name" class="form-control" required></div>
-                        <div class="mb-3"><label>Current Stock (kg)</label><input type="number" step="0.01" name="current_stock_kg" id="edit_stock" class="form-control" required></div>
-                        <div class="row">
-                            <div class="col"><label>Price/kg</label><input type="number" step="0.01" name="p_kilo" id="edit_pk" class="form-control" required></div>
-                            <div class="col"><label>Price/Half</label><input type="number" step="0.01" name="p_half" id="edit_ph" class="form-control" required></div>
-                            <div class="col"><label>Price/Sack</label><input type="number" step="0.01" name="p_sack" id="edit_ps" class="form-control" required></div>
-                        </div>
-                    </div>
-                    <div class="modal-footer"><button type="submit" class="btn btn-primary">Save Changes</button></div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="restockModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="process_restock.php" method="POST">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Restock: <span id="restockName"></span></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="product_id" id="restockId">
                         <div class="mb-3">
-                            <label class="form-label">How many kilograms to add?</label>
-                            <input type="number" step="0.01" name="added_weight" class="form-control" placeholder="e.g. 50 for 1 sack" required>
+                            <label class="small fw-700 text-uppercase mb-2 d-block text-secondary">Name</label>
+                            <input type="text" name="rice_type" class="form-control" required>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-4">
+                                <label class="small fw-700 text-uppercase mb-2 d-block text-secondary">₱/kg</label>
+                                <input type="number" step="0.01" name="p_kilo" class="form-control" required>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="small fw-700 text-uppercase mb-2 d-block text-secondary">₱/Half</label>
+                                <input type="number" step="0.01" name="p_half" class="form-control" required>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="small fw-700 text-uppercase mb-2 d-block text-secondary">₱/Sack</label>
+                                <input type="number" step="0.01" name="p_sack" class="form-control" required>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer"><button type="submit" class="btn btn-success">Confirm Restock</button></div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-dark w-100 py-3 fw-700">Add to Warehouse</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <script>
-    function openRestockModal(id, name) {
-        document.getElementById('restockId').value = id;
-        document.getElementById('restockName').innerText = name;
-        new bootstrap.Modal(document.getElementById('restockModal')).show();
-    }
-
-    function openEditModal(id, name, stock, pk, ph, ps) {
-        document.getElementById('edit_id').value = id;
-        document.getElementById('edit_name').value = name;
-        document.getElementById('edit_stock').value = stock;
-        document.getElementById('edit_pk').value = pk;
-        document.getElementById('edit_ph').value = ph;
-        document.getElementById('edit_ps').value = ps;
-        new bootstrap.Modal(document.getElementById('editRiceModal')).show();
-    }
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
